@@ -1,0 +1,16 @@
+$TTL    86400
+@	 IN	SOA	dns.{{ openshift.cluster_name }}.{{ openshift.base_domain }}. admin.{{ openshift.cluster_name }}.{{ openshift.base_domain }}. (
+                              3         ; Serial
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                         604800 );       ; Negative Cache TTL
+;
+            IN NS   dns.{{ openshift.cluster_name }}.{{ openshift.base_domain }}.
+dns         IN A    {{ dns.listen_address }}
+api         IN A    {{ openshift.api_address }}
+api-int     IN A    {{ openshift.api_address }}
+*.apps      IN A    {{ openshift.ingress_address }}
+{% for node in openshift.control_nodes %}
+{{ node.name }}   IN A    {{ node.networking.interfaces[0].ipv4.address[0].ip }}
+{% endfor %}

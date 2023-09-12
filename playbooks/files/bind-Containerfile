@@ -1,0 +1,21 @@
+FROM ubi9
+
+USER root
+
+RUN dnf -y install bind bind-utils
+
+RUN rndc-confgen -a
+
+COPY named.conf /etc/named.conf
+COPY files.zones /etc/named/files.zones
+COPY forward.zone /etc/named/forward.zone
+COPY reverse.zone /etc/named/reverse.zone
+
+RUN dnf clean all
+RUN rm -rf /var/cache/dnf/*
+
+RUN systemctl enable named.service
+
+EXPOSE 53/udp
+
+CMD [ "/sbin/init" ]

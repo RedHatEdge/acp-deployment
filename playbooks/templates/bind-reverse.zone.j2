@@ -1,0 +1,13 @@
+$TTL    86400
+@	IN	SOA	dns.{{ openshift.cluster_name }}.{{ openshift.base_domain }}. root.{{ openshift.cluster_name }}.{{ openshift.base_domain }}. (
+		1997022700        ; serial
+		28800             ; refresh
+		14400             ; retry
+		3600000           ; expire
+		86400             ; minimum
+)
+	    IN	    NS      dns.{{ openshift.cluster_name }}.{{ openshift.base_domain }}.
+;
+{% for node in openshift.control_nodes %}
+{{ node.networking.interfaces[0].ipv4.address[0].ip.split('.')[-1] }}     IN      PTR     {{ node.name }}.{{ openshift.cluster_name }}.{{ openshift.base_domain }}.
+{% endfor %}

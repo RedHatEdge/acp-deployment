@@ -1,0 +1,17 @@
+{% for acl in dns.acls %}
+acl "{{ acl.name }}" { {{ acl.network }}; };
+{% endfor %}
+
+options {
+        listen-on port 53 { {{ dns.listen_address }}; };
+        directory "/var/named";
+        recursion yes;
+        allow-query { localhost; {{ dns.acls | json_query('[*].name') | join('; ') }}; };
+        allow-recursion { localhost; {{ dns.acls | json_query('[*].name') | join('; ') }}; };
+        forwarders {
+{% for upstream_server in dns.upstream_servers %}
+                {{ upstream_server }};
+{% endfor %}
+        };
+};
+include "/etc/named/files.zones";

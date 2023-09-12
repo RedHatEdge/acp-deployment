@@ -1,0 +1,12 @@
+// forward
+zone "{{ openshift.cluster_name }}.{{ openshift.base_domain }}" IN {
+        type master;
+        file "/etc/named/forward.zone";
+        allow-update { none; };
+};
+
+// reverse
+zone "{{ dns.network.split('.')[2] }}.{{ dns.network.split('.')[1] }}.{{ dns.network.split('.')[0] }}.in-addr.arpa" IN {
+        type master;
+        file "/etc/named/reverse.zone";
+};

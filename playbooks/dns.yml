@@ -1,0 +1,54 @@
+---
+
+- name: Create dns for building ACP
+  hosts:
+    - helper
+  vars:
+    build_dir: ~/build/dns
+  become: true
+  module_defaults:
+    ansible.builtin.template:
+      mode: '0644'
+    ansible.builtin.copy:
+      mode: '0644'
+  pre_tasks:
+    - name: Create build directory
+      ansible.builtin.file:
+        path: "{{ build_dir }}"
+        state: directory
+        mode: '0755'
+    - name: Ensure podman is present
+      ansible.builtin.package:
+        name: podman
+  tasks:
+    - name: Template out named config
+      ansible.builtin.template:
+        src: templates/bind-named.conf.j2
+        dest: "{{ build_dir }}/named.conf"
+    - name: Template out zones
+      ansible.builtin.template:
+        src: templates/bind-files.zones.j2
+        dest: "{{ build_dir }}/files.zones"
+    - name: Template out foward zone file
+      ansible.builtin.template:
+        src: templates/bind-forward.zone.j2
+        dest: "{{ build_dir }}/forward.zone"
+    - name: Template out reverse zone file
+      ansible.builtin.template:
+        src: templates/bind-reverse.zone.j2
+        dest: "{{ build_dir }}/reverse.zone"
+    - name: Copy Containerfile
+      ansible.builtin.copy:
+        src: files/bind-Containerfile
+        dest: "{{ build_dir }}/Containerfile"
+    - name: Build container
+      containers.podman.podman_image:
+        name: dns
+        path: "{{ build_dir }}/"
+  post_tasks:
+    - name: Run dns container
+      containers.podman.podman_container:
+        name: dns
+        image: localhost/dns:latest
+        network: host
+        privileged: true
