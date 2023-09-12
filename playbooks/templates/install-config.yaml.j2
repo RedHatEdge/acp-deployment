@@ -1,0 +1,37 @@
+---
+
+apiVersion: v1
+baseDomain: {{ openshift.base_domain }}
+compute:
+- architecture: {{ openshift.worker_nodes.architecture | default('amd64') }}
+  hyperthreading: Enabled
+  name: worker
+{% if openshift.worker_nodes is defined %}
+  replicas: {{ openshift.worker_nodes | length }}
+{% else %}
+  replicas: 0
+{% endif %}
+controlPlane:
+  architecture: {{ openshift.control_nodes.architecture | default('amd64') }}
+  hyperthreading: Enabled
+  name: master
+  replicas: {{ openshift.control_nodes | length }}
+metadata:
+  name: {{ openshift.cluster_name }}
+networking:
+  clusterNetwork:
+  - cidr: {{ openshift.cluster_network.cidr | default('10.128.0.0/14') }}
+    hostPrefix: {{ openshift.cluster_network.host_prefix | default('23') }}
+  machineNetwork:
+  - cidr: {{ openshift.machine_network.cidr }}
+  networkType: OVNKubernetes 
+  serviceNetwork:
+  - 172.30.0.0/16
+platform:
+  baremetal:
+    apiVIPs:
+      - {{ openshift.api_address }}
+    ingressVIPs:
+      - {{ openshift.ingress_address }}
+pullSecret: '{{ openshift.pull_secret }}' 
+sshKey: '{{ openshift.ssh_pub_key }}'
