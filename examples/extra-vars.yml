@@ -1,0 +1,124 @@
+---
+
+# Define the architecture of HA or non-HA
+architecture: ha
+
+# Define DNS settings
+# To use external DNS, unset the dns_settings dictionary or set `external_dns` to true
+external_dns: false
+dns_settings:
+  network: 10.15.108.0/24
+  subnet_mask: 24
+  upstream_servers:
+    - 10.11.5.19
+    - 10.2.32.1
+  network_interface: eno1
+  acls:
+    - name: trusted
+      network: 10.0.0.0/8
+
+# OpenShift variables
+openshift:
+  version: 4.13.9 # Set a specific OCP version, otherwise `stable` is assumed
+  cluster_name: acp # Set the cluster name
+  base_domain: lab.msp.redhat.com # Set the base dns domain
+  pull_secret: 'your-pull-secret'
+  ssh_pub_key: 'your-ssh-pub-key'
+  api_address: 10.15.108.70 # Set the ip address of the api
+  ingress_address: 10.15.108.72 # Set the ingress ip address
+  cluster_network: # Set the cluster network
+    cidr: 10.128.0.0/14
+    host_prefix: 23
+  machine_network: # Set the machine network
+    cidr: 10.15.108.0/24
+  # Define nodes and their networking in a list
+  # Networking is defined via nmstate
+  # Python does not like '-' in variable names, however this will be handled via jinja templating
+  # If node-specific DNS/routes are desired, add them under the node entry, otherwise define them later under 
+  control_nodes:
+    - name: control-0
+      installation_device: /dev/disk/by-path/pci-0000:02:00.0-scsi-0:2:0:0
+      networking:
+        interfaces:
+          - name: eno4
+            mac_address: b8:ca:3a:6e:69:45
+            ipv4:
+              address:
+                - ip: 10.15.108.75
+                  prefix_length: 24
+          - name: bond0
+            type: bond
+            mac_address: b8:ca:3a:6e:69:40
+            link_aggregation:
+              mode: 802.3ad
+              options:
+                miimon: 100
+              ports:
+                - eno1
+                - enp3s0f0
+                - enp3s0f1
+            ipv4:
+              address:
+                - ip: 192.168.1.100
+                  prefix_length: 24
+    - name: control-1
+      installation_device: /dev/disk/by-path/pci-0000:02:00.0-scsi-0:2:0:0
+      networking:
+        interfaces:
+          - name: eno4
+            mac_address: 24:6e:96:69:56:95
+            ipv4:
+              address:
+                - ip: 10.15.108.76
+                  prefix_length: 24
+          - name: bond0
+            type: bond
+            mac_address: 24:6e:96:69:56:90
+            link_aggregation:
+              mode: 802.3ad
+              options:
+                miimon: 100
+              ports:
+                - eno1
+                - eno2
+                - enp3s0f0
+                - enp3s0f1
+            ipv4:
+              address:
+                - ip: 192.168.1.101
+                  prefix_length: 24
+    - name: control-2
+      installation_device: /dev/disk/by-path/pci-0000:02:00.0-scsi-0:2:0:0
+      networking:
+        interfaces:
+          - name: eno4
+            mac_address: b8:ca:3a:6e:17:dd
+            ipv4:
+              address:
+                - ip: 10.15.108.77
+                  prefix_length: 24
+          - name: bond0
+            type: bond
+            mac_address: b8:ca:3a:6e:17:d8
+            link_aggregation:
+              mode: 802.3ad
+              options:
+                miimon: 100
+              ports:
+                - eno1
+                - eno2
+                - enp3s0f0
+                - enp3s0f1
+            ipv4:
+              address:
+                - ip: 192.168.1.102
+                  prefix_length: 24
+  all_node_settings:
+    dns_resolvers:
+      - 10.15.108.44
+    routes:
+      - destination: 0.0.0.0/0
+        next_hop_address: 10.15.108.254
+        next_hop_interface: eno4
+    public_interface: eno4   
+    storage_interface: bond0

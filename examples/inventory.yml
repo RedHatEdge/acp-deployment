@@ -1,0 +1,12 @@
+---
+
+all:
+  children:
+    helper:
+      hosts:
+        helper-node:
+          ansible_host: 10.15.108.44
+          ansible_user: helper
+          ansible_password: 'your-password'
+          ansible_become_password: "{{ ansible_password }}"
+
