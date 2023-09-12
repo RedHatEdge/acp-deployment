@@ -1,0 +1,12 @@
+---
+
+- name: Setup virtualization on ACP
+  hosts:
+    - helper
+  vars:
+    install_dir: "/home/{{ ansible_user }}/install"
+  module_defaults:
+    redhat.openshift.k8s:
+      kubeconfig: "{{ install_dir }}/auth/kubeconfig"
+  roles:
+    - ../roles/openshift_virtualization
