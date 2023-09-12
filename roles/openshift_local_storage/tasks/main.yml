@@ -1,0 +1,26 @@
+---
+
+- name: Create namespace {{ _namespace.metadata.name }}
+  redhat.openshift.k8s:
+    definition: "{{ _namespace }}"
+
+- name: Create operator group {{ _operator_group.metadata.name }}
+  redhat.openshift.k8s:
+    definition: "{{ _operator_group }}"
+
+- name: Create subscription for local storage operator
+  redhat.openshift.k8s:
+    definition: "{{ _subscription }}"
+  
+- name: Create LocalVolumeDiscovery
+  redhat.openshift.k8s:
+    definition: "{{ _local_volume_discovery }}"
+  register: _instance_deploy
+  until:
+    - not _instance_deploy.failed
+  retries: 30
+  delay: 30
+
+- name: Create VolumeSet
+  redhat.openshift.k8s:
+    definition: "{{ _volume_set }}"

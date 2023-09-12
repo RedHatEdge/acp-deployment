@@ -1,0 +1,67 @@
+---
+
+# Flow:
+# 0. Tag nodes
+# 1. Namespace
+# 2. Operator group
+# 3. Subscription
+# 4. StorageCluster
+
+# TO-DO: Enable the console plugin
+
+- name: Tag nodes for storage
+  redhat.openshift.k8s:
+    definition:
+      kind: Node
+      apiVersion: v1
+      metadata:
+        name: "{{ node }}"
+        labels:
+          cluster.ocs.openshift.io/openshift-storage: ''
+  loop: "{{ openshift | json_query('control_nodes[*].name') }}"
+  loop_control:
+    loop_var: node
+
+- name: Create namespace {{ _namespace.metadata.name }}
+  redhat.openshift.k8s:
+    definition: "{{ _namespace }}"
+
+- name: Create operator group {{ _operator_group.metadata.name }}
+  redhat.openshift.k8s:
+    definition: "{{ _operator_group }}"
+
+- name: Create subscription for odf
+  redhat.openshift.k8s:
+    definition: "{{ _subscription }}"
+
+- name: Create NADs
+  redhat.openshift.k8s:
+    definition: "{{ _network_attachment_definitions }}"
+
+- name: Create StorageCluster
+  redhat.openshift.k8s:
+    definition: "{{ _storage_cluster }}"
+  register: _instance_deploy
+  until:
+    - not _instance_deploy.failed
+  retries: 30
+  delay: 30
+
+# - name: Enable the console plugin
+#   redhat.openshift.k8s:
+#     definition:
+#       name: cluster
+#       apiVersion: operator.openshift.io/v1
+#       kind: console
+#       spec:
+#         plugins: ["odf-console"]
+
+- name: Set default storage class for cluster
+  redhat.openshift.k8s:
+    definition:
+      kind: StorageClass
+      apiVersion: storage.k8s.io/v1
+      metadata:
+        name: ocs-storagecluster-ceph-rbd
+        annotations:
+          storageclass.kubernetes.io/is-default-class: "true"

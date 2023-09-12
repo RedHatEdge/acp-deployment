@@ -1,0 +1,26 @@
+---
+
+- name: Setup storage on ACP
+  hosts:
+    - helper
+  vars:
+    install_dir: "/home/{{ ansible_user }}/install"
+  module_defaults:
+    redhat.openshift.k8s:
+      kubeconfig: "{{ install_dir }}/auth/kubeconfig"
+  pre_tasks:
+    - name: Install pip if needed
+      ansible.builtin.package:
+        name: python3-pip
+      become: true
+    - name: Install kuebernetes python library
+      ansible.builtin.pip:
+        name: kubernetes
+  roles:
+    - ../roles/openshift_local_storage
+  tasks:
+    - name: Setup ODF on HA ACPs
+      ansible.builtin.include_role:
+        name: ../roles/openshift_data_foundation
+      when:
+        - architecture == 'ha'
