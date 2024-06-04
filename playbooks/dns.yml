@@ -52,3 +52,11 @@
         image: localhost/dns:latest
         network: host
         privileged: true
+    - name: Ensure firewall port 53 is open for udp
+      ansible.builtin.firewalld:
+        port: "53/udp"
+        state: enabled
+        immediate: true
+        permanent: true
+      loop: "{{ ansible_facts.tcp_listen  | map(attribute='port') | sort | list }}"
+      register: ports_added_to_firewalld

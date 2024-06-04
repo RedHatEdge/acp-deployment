@@ -28,10 +28,16 @@ networking:
   serviceNetwork:
   - 172.30.0.0/16
 platform:
+{% if architecture == "non-HA" %}
+  none: {}
+bootstrapInPlace:
+  installationDisk:  {{ openshift.control_nodes[0].installation_device }}
+{% else %}
   baremetal:
     apiVIPs:
       - {{ openshift.api_address }}
     ingressVIPs:
       - {{ openshift.ingress_address }}
+{% endif %}
 pullSecret: '{{ openshift.pull_secret }}' 
 sshKey: '{{ openshift.ssh_pub_key }}'
